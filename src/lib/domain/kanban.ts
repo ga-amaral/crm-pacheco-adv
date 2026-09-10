@@ -1,0 +1,1 @@
+export function moveLeadToColumn<T extends { id: string; pipeline_column?: string | null }>(leads: T[], id: string, column: string) { return leads.map((lead) => lead.id === id ? { ...lead, pipeline_column: column } : lead); }

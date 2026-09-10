@@ -1,101 +1,30 @@
-import Image from "next/image";
-
-export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
-}
+"use client";
+import { useEffect, useMemo, useState } from "react";
+import { Bell, LayoutGrid, List, Plus, Search, Users, WalletCards } from "lucide-react";
+import { LeadForm } from "@/components/leads/lead-form";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
+import { canManageUsers, getInitials, getTemperatureLabel, getTemperatureTone } from "@/lib/domain/profile";
+import { formatBRL, getPriorityLabel, getPriorityTone, summarizeFinance } from "@/lib/domain/finance";
+import { moveLeadToColumn } from "@/lib/domain/kanban";
+type Lead = { id: string; nome: string; telefone: string; temperatura?: string | null; status_pagamento?: string | null; prioridade?: string | null; valor_contrato?: number | null; pipeline_column?: string | null };
+type AppUser = { id: string; nome?: string | null; email: string; role: string; ativo?: boolean };
+type Finance = { totalRevenue: number; expectedRevenue: number; totalDebt: number; averageTicket: number; totalLeads: number; paidCount?: number; pendingCount?: number; overdueCount?: number; bySource: Record<string, number>; byTemperature: Record<string, number>; byPriority: Record<string, number>; byStatus?: Record<string, number>; byPipeline?: Record<string, number> };
+const columns = [{ name: "Novos", color: "#2563eb" }, { name: "Em contato", color: "#f59e0b" }, { name: "Proposta", color: "#8b5cf6" }, { name: "Fechados", color: "#16a34a" }];
+const tone: Record<string, string> = { Cold: "bg-blue-100 text-blue-700", Warm: "bg-amber-100 text-amber-700", Hot: "bg-red-100 text-red-700", Baixa: "bg-slate-100 text-slate-600", Média: "bg-amber-100 text-amber-700", Alta: "bg-red-100 text-red-700", Urgência: "bg-red-200 text-red-800", Pendente: "bg-amber-100 text-amber-700", Pago: "bg-emerald-100 text-emerald-700", Atrasado: "bg-red-100 text-red-700", Cancelado: "bg-slate-100 text-slate-600" };
+function Badge({ value }: { value?: string | null }) { const isTemperature = value && ["Cold", "Warm", "Hot"].includes(value); const label = isTemperature ? getTemperatureLabel(value) : getPriorityLabel(value); return label ? <span className={`rounded-full px-2 py-1 text-[11px] font-semibold ${isTemperature ? `border-l-4 ${getTemperatureTone(value)}` : ""} ${tone[value ?? ""] ?? "bg-slate-100 text-slate-600"}`}>{label}</span> : <span className="text-xs text-slate-400">—</span>; }
+export default function Home() { const [tab, setTab] = useState<"leads" | "finance" | "users">("leads"); const [leads, setLeads] = useState<Lead[]>([]); const [users, setUsers] = useState<AppUser[]>([]); const [finance, setFinance] = useState<Finance | null>(null); const [query, setQuery] = useState(""); const [view, setView] = useState<"kanban" | "list">("kanban"); const [loading, setLoading] = useState(true); const [editing, setEditing] = useState<Lead | null>(null); const [profile, setProfile] = useState<{ nome?: string | null; email: string; role?: string | null } | null>(null);
+  useEffect(() => { fetch("/api/leads").then(async (r) => r.ok ? setLeads(await r.json()) : setLeads([])).finally(() => setLoading(false)); fetch("/api/finance").then(async (r) => r.ok ? setFinance(await r.json()) : null); fetch("/api/auth/users").then(async (r) => r.ok ? setUsers(await r.json()) : setUsers([])); fetch("/api/auth/profile").then(async (r) => r.ok ? setProfile(await r.json()) : null); }, []);
+  useEffect(() => { if (tab === "finance") refreshFinance(); }, [tab]);
+  const visible = useMemo(() => leads.filter((lead) => `${lead.nome} ${lead.telefone}`.toLowerCase().includes(query.toLowerCase())), [leads, query]);
+  async function toggleUser(user: AppUser) { const response = await fetch("/api/auth/users", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: user.id, ativo: !user.ativo }) }); if (response.ok) { const updated = await response.json(); setUsers((items) => items.map((item) => item.id === updated.id ? updated : item)); } }
+  async function refreshFinance() { const response = await fetch("/api/finance"); if (response.ok) setFinance(await response.json()); }
+  async function moveLead(id: string, column: string) { const previous = leads; setLeads((items) => moveLeadToColumn(items, id, column)); const response = await fetch(`/api/leads/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ pipeline_column: column }) }); if (!response.ok) setLeads(previous); else refreshFinance(); }
+  const canUsers = canManageUsers(profile?.role);
+  return <main className="min-h-screen bg-[#f7f8fa] text-slate-950 dark:bg-slate-950 dark:text-slate-100"><aside className="fixed inset-y-0 left-0 hidden w-64 border-r border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900 lg:block"><div className="mb-12 flex items-center gap-3"><div className="grid size-9 place-items-center rounded-xl bg-blue-600 font-bold text-white">P</div><p className="font-semibold">Pacheco CRM</p></div><p className="mb-3 px-3 text-[11px] font-semibold uppercase tracking-widest text-slate-400">Workspace</p><nav className="space-y-1"><Nav active={tab === "leads"} onClick={() => setTab("leads")} icon={<LayoutGrid size={18} />}>Leads</Nav><Nav active={tab === "finance"} onClick={() => setTab("finance")} icon={<WalletCards size={18} />}>Financeiro</Nav>{canUsers && <Nav active={tab === "users"} onClick={() => setTab("users")} icon={<Users size={18} />}>Usuários</Nav>}</nav></aside><section className="lg:pl-64"><header className="flex h-20 items-center justify-between border-b border-slate-200 bg-white px-6 dark:border-slate-800 dark:bg-slate-900 lg:px-10"><div><p className="text-sm text-slate-400">Workspace Pacheco Advogados</p><h1 className="text-xl font-semibold">{tab === "leads" ? "Pipeline de leads" : tab === "finance" ? "Dashboard financeiro" : "Usuários do workspace"}</h1></div><div className="flex items-center gap-3"><ThemeToggle /><Bell size={18} className="text-slate-400" /><a href="/profile" title="Editar perfil" className="grid size-9 place-items-center rounded-full bg-blue-100 text-sm font-semibold text-blue-700">{getInitials(profile?.nome, profile?.email)}</a></div></header><div className="space-y-8 p-6 lg:p-10">{tab === "leads" && <LeadsView leads={leads} visible={visible} loading={loading} query={query} setQuery={setQuery} view={view} setView={setView} onEdit={setEditing} onMove={moveLead} />}{tab === "finance" && <FinanceView data={finance} />}{tab === "users" && canUsers && <UsersView users={users} onToggle={toggleUser} />}</div></section>{editing && <LeadForm initialLead={editing} onCreated={(updated) => setLeads((items) => items.map((item) => item.id === updated.id ? updated as Lead : item))} onClose={() => setEditing(null)} />}</main>; }
+function Nav({ active, onClick, icon, children }: { active: boolean; onClick: () => void; icon: React.ReactNode; children: React.ReactNode }) { return <button onClick={onClick} className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm ${active ? "bg-blue-50 font-semibold text-blue-700" : "text-slate-500 hover:bg-slate-50"}`}>{icon}{children}</button>; }
+function LeadsView({ leads, visible, loading, query, setQuery, view, setView, onEdit, onMove }: { leads: Lead[]; visible: Lead[]; loading: boolean; query: string; setQuery: (v: string) => void; view: "kanban" | "list"; setView: (v: "kanban" | "list") => void; onEdit: (lead: Lead) => void; onMove: (id: string, column: string) => void }) { const [dragged, setDragged] = useState<string | null>(null); const finance = summarizeFinance(leads); return <><div className="grid gap-4 sm:grid-cols-3"><Stat label="Leads no pipeline" value={String(leads.length)} icon={<Users size={19} />} /><Stat label="Valor em contratos" value={formatBRL(leads.reduce((s, l) => s + Number(l.valor_contrato ?? 0), 0))} icon={<WalletCards size={19} />} /><Stat label="Conversão" value={`${finance.conversionRate.toFixed(1).replace(".", ",")}%`} icon={<LayoutGrid size={19} />} /></div><div className="flex items-center justify-between"><div><h2 className="text-lg font-semibold">Todos os leads</h2><p className="mt-1 text-sm text-slate-400">Arraste um card para outra coluna ou clique para editar.</p></div><a href="/leads/new" className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white"><Plus size={17} /> Novo lead</a></div><div className="flex gap-3 rounded-2xl border border-slate-200 bg-white p-3"><div className="relative flex-1"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={17} /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar por nome ou telefone..." className="w-full rounded-xl bg-slate-50 py-2.5 pl-10 pr-4 text-sm outline-none focus:ring-2 focus:ring-blue-500" /></div><button onClick={() => setView(view === "kanban" ? "list" : "kanban")} className="rounded-xl border border-slate-200 px-3 text-slate-500">{view === "kanban" ? <List size={18} /> : <LayoutGrid size={18} />}</button></div>{loading ? <Empty text="Carregando leads..." /> : view === "kanban" ? <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">{columns.map((column) => <div key={column.name} onDragOver={(event) => event.preventDefault()} onDrop={() => { if (dragged) { onMove(dragged, column.name); setDragged(null); } }} className={`min-h-40 rounded-2xl bg-slate-100/80 p-3 transition-colors ${dragged ? "ring-2 ring-blue-200" : ""}`}><div className="mb-3 flex items-center gap-2"><span className="size-2 rounded-full" style={{ backgroundColor: column.color }} /><h3 className="text-sm font-semibold">{column.name}</h3></div>{visible.filter((lead) => (lead.pipeline_column ?? "Novos") === column.name || (column.name === "Novos" && lead.pipeline_column === "new")).map((lead) => <button key={lead.id} draggable onDragStart={() => setDragged(lead.id)} onDragEnd={() => setDragged(null)} onClick={() => onEdit(lead)} className="mb-3 block w-full cursor-grab rounded-xl border border-slate-200 bg-white p-4 text-left shadow-sm hover:border-blue-400 active:cursor-grabbing"><p className="text-sm font-semibold">{lead.nome}</p><p className="mt-1 text-xs text-slate-400">{lead.telefone}</p><div className="mt-3 flex items-center justify-between border-t pt-3"><Badge value={lead.temperatura} /><Badge value={lead.status_pagamento} /><span className="text-xs">{lead.valor_contrato ? formatBRL(Number(lead.valor_contrato)) : "Sem valor"}</span></div></button>)}</div>)}</div> : <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white"><table className="w-full text-left text-sm"><thead className="bg-slate-50 text-xs uppercase text-slate-400"><tr><th className="px-5 py-4">Nome</th><th className="px-5 py-4">Temperatura</th><th className="px-5 py-4">Pagamento</th><th className="px-5 py-4">Contrato</th></tr></thead><tbody>{visible.map((lead) => <tr key={lead.id} onClick={() => onEdit(lead)} className="cursor-pointer border-t hover:bg-slate-50"><td className="px-5 py-4 font-medium">{lead.nome}</td><td className="px-5 py-4"><Badge value={lead.temperatura} /></td><td className="px-5 py-4"><Badge value={lead.status_pagamento} /></td><td className="px-5 py-4">{lead.valor_contrato ? formatBRL(Number(lead.valor_contrato)) : "—"}</td></tr>)}</tbody></table></div>}</>; }
+function FinanceView({ data }: { data: Finance | null }) { const breakdown = (title: string, values?: Record<string, number>) => <div className="rounded-2xl border border-slate-200 bg-white p-5"><h3 className="mb-4 font-semibold">{title}</h3>{Object.entries(values ?? {}).length ? Object.entries(values ?? {}).map(([key, value]) => { const label = title.includes("temperatura") ? getTemperatureLabel(key) : title.includes("prioridade") ? getPriorityLabel(key) : key; return <div key={key} className="mb-3 flex items-center justify-between text-sm"><span className="text-slate-500">{label}</span><span className={`rounded-full px-2.5 py-1 font-semibold ${title.includes("prioridade") ? getPriorityTone(key) : "bg-blue-50 text-blue-700"}`}>{value}</span></div> }) : <p className="text-sm text-slate-400">Sem dados ainda.</p>}</div>; return data ? <><div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><Stat label="Receita total" value={formatBRL(data.totalRevenue)} icon={<WalletCards size={19} />} /><Stat label="Receita esperada" value={formatBRL(data.expectedRevenue)} icon={<WalletCards size={19} />} /><Stat label="Total em dívida" value={formatBRL(data.totalDebt)} icon={<WalletCards size={19} />} /><Stat label="Ticket médio" value={formatBRL(data.averageTicket)} icon={<WalletCards size={19} />} /></div><div className="grid gap-4 sm:grid-cols-3"><Stat label="Pagos" value={String(data.paidCount ?? 0)} icon={<WalletCards size={19} />} /><Stat label="Pendentes" value={String(data.pendingCount ?? 0)} icon={<WalletCards size={19} />} /><Stat label="Atrasados" value={String(data.overdueCount ?? 0)} icon={<WalletCards size={19} />} /></div><div className="grid gap-6 lg:grid-cols-3"><Donut title="Status dos leads" values={data.byStatus} colors={["#16a34a", "#f59e0b", "#ef4444", "#94a3b8"]} /> <Donut title="Temperaturas" values={data.byTemperature} colors={["#2563eb", "#f59e0b", "#ef4444"]} /> <Donut title="Prioridades" values={data.byPriority} colors={["#94a3b8", "#f59e0b", "#f97316", "#ef4444"]} /></div><div className="grid gap-6 lg:grid-cols-2">{breakdown("Por status de pagamento", data.byStatus)}{breakdown("Por etapa do pipeline", data.byPipeline)}{breakdown("Por fonte", data.bySource)}{breakdown("Por temperatura", data.byTemperature)}{breakdown("Por prioridade", data.byPriority)}</div></> : <Empty text="Carregando financeiro..." />; }
+function Donut({ title, values, colors }: { title: string; values?: Record<string, number>; colors: string[] }) { const entries = Object.entries(values ?? {}); const total = entries.reduce((sum, [, value]) => sum + value, 0); let cursor = 0; const gradient = entries.map(([, value], index) => { const start = cursor; cursor += total ? (value / total) * 360 : 0; return `${colors[index % colors.length]} ${start}deg ${cursor}deg`; }).join(", "); return <div className="rounded-2xl border border-slate-200 bg-white p-5"><h3 className="mb-4 font-semibold">{title}</h3>{total ? <div className="flex items-center gap-5"><div className="grid size-28 shrink-0 place-items-center rounded-full" style={{ background: `conic-gradient(${gradient})` }}><div className="grid size-16 place-items-center rounded-full bg-white text-sm font-semibold">{total}</div></div><div className="space-y-2 text-xs">{entries.map(([key, value], index) => <div key={key} className="flex items-center gap-2"><span className="size-2 rounded-full" style={{ backgroundColor: colors[index % colors.length] }} />{key === "Cold" || key === "Warm" || key === "Hot" ? getTemperatureLabel(key) : getPriorityLabel(key)}: {value}</div>)}</div></div> : <p className="text-sm text-slate-400">Sem dados ainda.</p>}</div>; }
+function UsersView({ users, onToggle }: { users: AppUser[]; onToggle: (user: AppUser) => void }) { return <div className="rounded-2xl border border-slate-200 bg-white p-6"><div className="mb-6 flex items-center justify-between"><div><h2 className="font-semibold">Usuários cadastrados</h2><p className="mt-1 text-sm text-slate-400">Perfis com acesso ao workspace.</p></div><a href="/users/new" className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white">Novo usuário</a></div>{users.length ? <div className="space-y-2">{users.map((user) => <div key={user.id} className="flex items-center justify-between rounded-xl border border-slate-100 p-4"><div><p className="text-sm font-medium">{user.nome || user.email}</p><p className="text-xs text-slate-400">{user.email} · {user.role}</p></div><button onClick={() => onToggle(user)} className={`rounded-full px-3 py-1 text-xs font-semibold ${user.ativo === false ? "bg-red-100 text-red-700" : "bg-emerald-100 text-emerald-700"}`}>{user.ativo === false ? "Inativo" : "Ativo"}</button></div>)}</div> : <Empty text="Nenhum usuário encontrado." />}</div>; }
+function Stat({ label, value, icon }: { label: string; value: string; icon: React.ReactNode }) { return <div className="rounded-2xl border border-slate-200 bg-white p-5"><div className="mb-5 flex justify-between"><p className="text-sm text-slate-500">{label}</p><span className="rounded-xl bg-blue-50 p-2.5 text-blue-600">{icon}</span></div><p className="text-2xl font-semibold tracking-tight">{value}</p></div>; }
+function Empty({ text }: { text: string }) { return <div className="rounded-2xl border border-dashed border-slate-300 p-16 text-center text-sm text-slate-400">{text}</div>; }
