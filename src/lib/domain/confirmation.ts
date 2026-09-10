@@ -1,0 +1,1 @@
+export function getDeleteConfirmationMessage(count: number) { return count === 1 ? "Excluir este lead? Esta ação é permanente e não pode ser desfeita." : `Excluir ${count} leads? Esta ação é permanente e não pode ser desfeita.`; }

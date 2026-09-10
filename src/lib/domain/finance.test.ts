@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatBRL, getPriorityLabel, getPriorityTone, LEAD_SOURCES, summarizeFinance } from "./finance";
+import { formatBRL, getPriorityLabel, getPriorityTone, getSourceTone, LEAD_SOURCES, summarizeFinance } from "./finance";
 
 describe("finance summaries", () => {
   it("formats decimal values in Brazilian currency", () => {
@@ -24,7 +24,11 @@ describe("finance summaries", () => {
 
   it("normalizes priorities and assigns visual tones", () => {
     expect(getPriorityLabel("urgente")).toBe("Urgência");
-    expect(getPriorityTone("Alta")).toContain("red");
-    expect(getPriorityTone("Média")).toContain("amber");
+    expect(getPriorityTone("Alta")).toContain("orange");
+    expect(getPriorityTone("Média")).toContain("blue");
+  });
+
+  it("assigns a color to every standard source", () => {
+    for (const source of LEAD_SOURCES) expect(getSourceTone(source)).toContain("bg-");
   });
 });

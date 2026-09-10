@@ -27,3 +27,14 @@ export async function POST(request: Request) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json(data, { status: 201 });
 }
+
+export async function DELETE(request: Request) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+  const body = await request.json().catch(() => ({}));
+  if (!Array.isArray(body.ids) || body.ids.length === 0 || body.ids.some((id: unknown) => typeof id !== "string")) return NextResponse.json({ error: "Selecione ao menos um lead" }, { status: 400 });
+  const { error } = await supabase.from("leads").delete().in("id", body.ids);
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ deleted: body.ids.length });
+}
