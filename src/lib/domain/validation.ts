@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { PAYMENT_STATUSES, TEMPERATURES } from "./constants";
+import { LEGAL_PRODUCTS, PAYMENT_STATUSES, TEMPERATURES } from "./constants";
 
 const emptyToNull = (value: unknown) => value === "" ? null : value;
 const nullableText = z.preprocess(emptyToNull, z.string().trim().nullable().optional());
@@ -10,6 +10,7 @@ export const leadSchema = z.object({
   telefone: z.string().trim().min(1, "Telefone é obrigatório"),
   fonte_contato: z.string().trim().min(1, "Fonte de contato é obrigatória"),
   temperatura: z.preprocess(emptyToNull, z.enum(TEMPERATURES).nullable().optional()),
+  produto_juridico: z.preprocess(emptyToNull, z.enum(LEGAL_PRODUCTS).nullable().optional()),
   valor_divida: z.preprocess((value) => value === "" ? undefined : value, z.coerce.number().min(0, "Dívida inválida")),
   cnpj: z.string().trim().min(1, "CNPJ é obrigatório"),
   prioridade: z.string().trim().min(1, "Prioridade é obrigatória"),

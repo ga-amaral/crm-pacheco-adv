@@ -1,10 +1,11 @@
-import type { Role, Temperature, PaymentStatus } from "./constants";
+import type { Role, Temperature, PaymentStatus, LegalProduct } from "./constants";
 
 export type LeadInput = {
   nome: string;
   telefone: string;
   fonte_contato?: string | null;
   temperatura?: Temperature | null;
+  produto_juridico?: LegalProduct | null;
   valor_divida?: number | null;
   cnpj?: string | null;
   prioridade?: string | null;
