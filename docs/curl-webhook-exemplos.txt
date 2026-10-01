@@ -1,0 +1,44 @@
+EXEMPLOS DE cURL - WEBHOOK DO CRM (n8n)
+=======================================
+Troque SEU_N8N_WEBHOOK_SECRET e UUID_DO_WORKSPACE pelos valores reais.
+Produtos jurídicos aceitos: Superendividamento | DBA | RCPCC | Transação Tributária
+
+
+1) ATUALIZAR o produto jurídico - localizando o lead pelo TELEFONE
+-------------------------------------------------------------------
+curl --request PATCH 'https://crm-pacheco-adv.vercel.app/api/webhook' --header 'Content-Type: application/json' --header 'x-webhook-secret: SEU_N8N_WEBHOOK_SECRET' --data-raw '{"workspace_id":"UUID_DO_WORKSPACE","telefone":"11999999999","update":{"produto_juridico":"DBA"}}'
+
+Obs.: o telefone precisa estar escrito igual ao cadastrado no CRM.
+Se houver mais de um lead com o mesmo telefone, a API responde 409: use o id (exemplo 2).
+
+
+2) ATUALIZAR o produto jurídico - localizando o lead pelo ID
+-------------------------------------------------------------
+curl --request PATCH 'https://crm-pacheco-adv.vercel.app/api/webhook' --header 'Content-Type: application/json' --header 'x-webhook-secret: SEU_N8N_WEBHOOK_SECRET' --data-raw '{"workspace_id":"UUID_DO_WORKSPACE","id":"UUID_DO_LEAD","update":{"produto_juridico":"RCPCC"}}'
+
+
+3) ATUALIZAR vários campos de uma vez
+--------------------------------------
+curl --request PATCH 'https://crm-pacheco-adv.vercel.app/api/webhook' --header 'Content-Type: application/json' --header 'x-webhook-secret: SEU_N8N_WEBHOOK_SECRET' --data-raw '{"workspace_id":"UUID_DO_WORKSPACE","id":"UUID_DO_LEAD","update":{"produto_juridico":"Superendividamento","temperatura":"Hot","status_pagamento":"Pago","pipeline_column":"Fechados"}}'
+
+
+4) LIMPAR o produto jurídico
+-----------------------------
+curl --request PATCH 'https://crm-pacheco-adv.vercel.app/api/webhook' --header 'Content-Type: application/json' --header 'x-webhook-secret: SEU_N8N_WEBHOOK_SECRET' --data-raw '{"workspace_id":"UUID_DO_WORKSPACE","id":"UUID_DO_LEAD","update":{"produto_juridico":null}}'
+
+
+5) CRIAR lead já com o produto jurídico (POST)
+-----------------------------------------------
+curl --request POST 'https://crm-pacheco-adv.vercel.app/api/webhook' --header 'Content-Type: application/json' --header 'x-webhook-secret: SEU_N8N_WEBHOOK_SECRET' --data-raw '{"workspace_id":"UUID_DO_WORKSPACE","nome":"Maria da Silva","telefone":"11999999999","fonte_contato":"Instagram","produto_juridico":"Transação Tributária","valor_divida":12500.75,"cnpj":"12345678000100","prioridade":"Alta","email":"maria@example.com","temperatura":"Hot","valor_contrato":8500.50,"status_pagamento":"Pendente","follow_up":"Retornar amanhã"}'
+
+
+RESPOSTAS DO PATCH
+-------------------
+200  {"id":"...","status":"updated"}   atualizado com sucesso
+400  payload inválido (ex.: produto fora da lista, faltou id/telefone ou update vazio)
+401  x-webhook-secret incorreto ou não configurado na Vercel
+404  lead não encontrado
+409  mais de um lead com esse telefone (use o id)
+
+IMPORTANTE: o PATCH só funciona depois que a migration do Supabase for aplicada
+e o deploy da branch feat/produto-juridico estiver no ar.
