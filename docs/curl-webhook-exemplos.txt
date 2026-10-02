@@ -1,7 +1,7 @@
 EXEMPLOS DE cURL - WEBHOOK DO CRM (n8n)
 =======================================
 Troque SEU_N8N_WEBHOOK_SECRET e UUID_DO_WORKSPACE pelos valores reais.
-Produtos jurídicos aceitos: Superendividamento | DBA | RCPCC | Transação Tributária
+Produtos jurídicos aceitos: Superendividamento | DBA | RCPCC | Transação Tributária | CC
 
 
 1) ATUALIZAR o produto jurídico - localizando o lead pelo TELEFONE

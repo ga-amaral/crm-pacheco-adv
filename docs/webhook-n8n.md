@@ -97,7 +97,7 @@ O lead é localizado por `id` **ou** por `telefone` (dentro do `workspace_id`). 
 }
 ```
 
-- `produto_juridico` aceita: `Superendividamento`, `DBA`, `RCPCC` e `Transação Tributária` (ou `null` para limpar).
+- `produto_juridico` aceita: `Superendividamento`, `DBA`, `RCPCC`, `Transação Tributária` e `CC` (ou `null` para limpar).
 - `update` aceita os mesmos campos do cadastro, incluindo `pipeline_column`.
 - Respostas: `200` `{ "id": "...", "status": "updated" }`, `400` payload inválido, `401` segredo incorreto, `404` lead não encontrado, `409` mais de um lead com o telefone (use o `id`).
 - As alterações são registradas no histórico (`audit_log`) sem usuário associado.

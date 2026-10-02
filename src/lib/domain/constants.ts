@@ -1,6 +1,6 @@
 export const ROLES = ["Admin Master", "Owner", "User"] as const;
 export const TEMPERATURES = ["Cold", "Warm", "Hot"] as const;
-export const LEGAL_PRODUCTS = ["Superendividamento", "DBA", "RCPCC", "Transação Tributária"] as const;
+export const LEGAL_PRODUCTS = ["Superendividamento", "DBA", "RCPCC", "Transação Tributária", "CC"] as const;
 export const PAYMENT_STATUSES = ["Pendente", "Pago", "Atrasado", "Cancelado"] as const;
 export const DROPDOWN_TYPES = ["fonte_contato", "follow_up", "temperatura", "status_pagamento"] as const;
 export const DASHBOARDS = ["leads", "finance"] as const;
